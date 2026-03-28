@@ -12,38 +12,99 @@
         #ui-layer { position: absolute; top: 0; left: 0; width: 100%; height: 100%; pointer-events: none; z-index: 100; }
         .win98-window {
             position: absolute; background: #c0c0c0; border: 2px solid; border-color: #dfdfdf #808080 #808080 #dfdfdf;
-            padding: 2px; box-shadow: 2px 2px 0 #000; pointer-events: auto;
+            padding: 2px; box-shadow: 1px 1px 0 #000; pointer-events: auto;
+            display: flex; flex-direction: column;
         }
-        .title-bar { background: #000080; color: white; padding: 3px 5px; font-weight: bold; display: flex; justify-content: space-between; align-items: center; }
-        .window-content { padding: 10px; color: #000; }
-        button { background: #c0c0c0; border: 2px solid; border-color: #dfdfdf #808080 #808080 #dfdfdf; cursor: pointer; padding: 3px 10px; }
-        button:active { border-color: #808080 #dfdfdf #dfdfdf #808080; }
+        .title-bar { 
+            background: linear-gradient(90deg, #000080, #1084d0); 
+            color: white; padding: 3px 5px; font-weight: bold; 
+            display: flex; justify-content: space-between; align-items: center; 
+            font-size: 12px; height: 18px;
+        }
+        .title-bar-text { white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+        .title-bar-controls { display: flex; gap: 2px; }
+        .win98-btn {
+            width: 16px; height: 14px; background: #c0c0c0; border: 1px solid;
+            border-color: #dfdfdf #808080 #808080 #dfdfdf; font-size: 9px;
+            display: flex; align-items: center; justify-content: center; color: #000;
+            padding: 0; font-weight: bold;
+        }
+        .window-content { padding: 10px; color: #000; background: #c0c0c0; flex-grow: 1; }
+        
+        button { 
+            background: #c0c0c0; border: 2px solid; border-color: #dfdfdf #808080 #808080 #dfdfdf; 
+            cursor: pointer; padding: 3px 10px; font-family: 'Courier New', Courier, monospace;
+        }
+        button:active { border-color: #808080 #dfdfdf #dfdfdf #808080; padding: 4px 9px 2px 11px; }
 
         /* --- BOOT SEQUENCE --- */
         #boot-screen { position: absolute; width: 100%; height: 100%; background: #000; z-index: 1000; display: flex; flex-direction: column; justify-content: center; align-items: center; }
-        .bios-text { width: 80%; color: #0f0; font-size: 14px; text-align: left; }
+        .bios-text { width: 80%; color: #0f0; font-size: 14px; text-align: left; line-height: 1.4; }
 
         /* --- DESKTOP --- */
         #desktop { width: 100%; height: calc(100% - 30px); position: relative; display: none; background: #008080; }
-        .icon { position: absolute; width: 64px; height: 80px; text-align: center; cursor: pointer; pointer-events: auto; }
-        .icon img { width: 32px; height: 32px; background: #c0c0c0; display: block; margin: 0 auto 5px; border: 2px solid #fff; }
-        .icon span { background: #000080; color: #fff; font-size: 12px; padding: 1px 2px; }
+        .icon { 
+            position: absolute; width: 70px; height: 70px; text-align: center; cursor: pointer; 
+            pointer-events: auto; display: flex; flex-direction: column; align-items: center;
+            justify-content: flex-start; padding-top: 10px;
+        }
+        .icon:hover span { background: #000080; color: #fff; }
+        .icon-img { 
+            width: 32px; height: 32px; margin-bottom: 5px; 
+            image-rendering: pixelated;
+            background: #c0c0c0; border: 1px inset #fff;
+        }
+        .icon span { color: #fff; font-size: 11px; padding: 1px 3px; text-shadow: 1px 1px #000; }
 
-        #taskbar { position: absolute; bottom: 0; width: 100%; height: 30px; background: #c0c0c0; border-top: 2px solid #fff; display: none; z-index: 500; align-items: center; padding: 0 5px; box-sizing: border-box; }
-        .start-btn { font-weight: bold; display: flex; align-items: center; gap: 5px; border: 2px solid; border-color: #dfdfdf #808080 #808080 #dfdfdf; padding: 2px 10px; height: 22px; cursor: pointer; color: #000; }
+        #taskbar { 
+            position: absolute; bottom: 0; width: 100%; height: 30px; background: #c0c0c0; 
+            border-top: 2px solid #dfdfdf; display: none; z-index: 500; align-items: center; 
+            padding: 2px 5px; box-sizing: border-box; gap: 5px;
+        }
+        .start-btn { 
+            font-weight: bold; display: flex; align-items: center; gap: 5px; 
+            border: 2px solid; border-color: #dfdfdf #808080 #808080 #dfdfdf; 
+            padding: 0 10px; height: 22px; cursor: pointer; color: #000;
+            background: #c0c0c0;
+        }
+        .start-btn:active { border-color: #808080 #dfdfdf #dfdfdf #808080; }
+        
+        #start-menu {
+            position: absolute; bottom: 30px; left: 0; width: 200px; background: #c0c0c0;
+            border: 2px solid; border-color: #dfdfdf #808080 #808080 #dfdfdf;
+            display: none; flex-direction: column; z-index: 600;
+        }
+        .start-menu-sidebar {
+            width: 25px; background: linear-gradient(0deg, #000080, #1084d0);
+            position: absolute; left: 0; top: 0; bottom: 0;
+            writing-mode: vertical-rl; transform: rotate(180deg);
+            color: #c0c0c0; font-weight: bold; padding: 5px; font-size: 18px;
+            display: flex; align-items: center;
+        }
+        .start-menu-items { margin-left: 25px; display: flex; flex-direction: column; }
+        .start-item { padding: 8px 10px; cursor: pointer; color: #000; font-size: 12px; display: flex; align-items: center; gap: 10px; }
+        .start-item:hover { background: #000080; color: #fff; }
+        .start-item-icon { width: 16px; height: 16px; background: #808080; }
 
         /* --- CRT OVERLAY --- */
         #crt { position: absolute; top: 0; left: 0; width: 100%; height: 100%; pointer-events: none; z-index: 10000;
-               background: linear-gradient(rgba(18, 16, 16, 0) 50%, rgba(0, 0, 0, 0.2) 50%), linear-gradient(90deg, rgba(255, 0, 0, 0.05), rgba(0, 255, 0, 0.02), rgba(0, 0, 255, 0.05));
-               background-size: 100% 4px, 3px 100%; opacity: 0.4; }
+               background: linear-gradient(rgba(18, 16, 16, 0) 50%, rgba(0, 0, 0, 0.1) 50%), linear-gradient(90deg, rgba(255, 0, 0, 0.03), rgba(0, 255, 0, 0.01), rgba(0, 0, 255, 0.03));
+               background-size: 100% 3px, 2px 100%; opacity: 0.5; }
 
         /* --- STATS --- */
-        #stats { position: absolute; top: 5px; right: 5px; color: #fff; z-index: 1000; text-shadow: 1px 1px #000; font-weight: bold; }
+        #stats { position: absolute; top: 5px; right: 5px; color: #fff; z-index: 1000; text-shadow: 1px 1px #000; font-weight: bold; font-size: 14px; }
+        
+        #bonzo-face {
+            position: absolute; top: 0; left: 0; width: 100%; height: 100%;
+            display: none; z-index: 9999; pointer-events: none;
+            background: #000; justify-content: center; align-items: center;
+        }
     </style>
 </head>
 <body>
     <div id="crt"></div>
     <div id="stats">RUNES: 0/3</div>
+    <div id="bonzo-face"><div style="color: #f00; font-size: 100px;">: )</div></div>
 
     <!-- BOOT SCREEN -->
     <div id="boot-screen">
@@ -51,45 +112,75 @@
     </div>
 
     <!-- LOGIN SCREEN -->
-    <div id="login-screen" style="display: none; position: absolute; width: 100%; height: 100%; background: #008080; z-index: 900; display: flex; justify-content: center; align-items: center;">
-        <div class="win98-window" style="width: 300px;">
-            <div class="title-bar"><span>LOG ON TO 98XX</span></div>
-            <div class="window-content">
-                <p>USERNAME: <b>GUEST</b></p>
-                <p>PASSWORD: [********]</p>
-                <button id="login-btn" style="width: 100%">OK</button>
+    <div id="login-screen" style="display: none; position: absolute; width: 100%; height: 100%; background: #008080; z-index: 900; align-items: center; justify-content: center;">
+        <div class="win98-window" style="width: 320px;">
+            <div class="title-bar">
+                <span class="title-bar-text">Welcome to 98XX</span>
+                <div class="title-bar-controls"><div class="win98-btn">?</div><div class="win98-btn">X</div></div>
+            </div>
+            <div class="window-content" style="display: flex; gap: 15px; align-items: center;">
+                <div style="width: 48px; height: 48px; background: #808080; border: 1px solid #000;"></div>
+                <div style="flex-grow: 1;">
+                    <p style="margin-top: 0; font-size: 12px;">Type a user name and password to log on to 98XX.</p>
+                    <div style="display: flex; flex-direction: column; gap: 5px; font-size: 12px;">
+                        <label>User name: <input type="text" value="GUEST" readonly style="width: 100px; background: #fff; border: 1px inset;"></label>
+                        <label>Password: <input type="password" value="********" readonly style="width: 100px; background: #fff; border: 1px inset;"></label>
+                    </div>
+                    <div style="margin-top: 15px; display: flex; justify-content: flex-end;">
+                        <button id="login-btn">OK</button>
+                    </div>
+                </div>
             </div>
         </div>
     </div>
 
     <!-- DESKTOP -->
     <div id="desktop">
-        <div class="icon" style="top: 20px; left: 20px;" onclick="launchGame('julian')">
-            <img src=""><span>JULIAN.EXE</span>
+        <div class="icon" id="icon-julian" style="top: 20px; left: 20px;" onclick="launchGame('julian')">
+            <div class="icon-img" style="background: #ff0;"></div><span>JULIAN.EXE</span>
         </div>
-        <div class="icon" style="top: 120px; left: 20px;" onclick="launchGame('popper')">
-            <img src=""><span>POPPER.EXE</span>
+        <div class="icon" id="icon-popper" style="top: 110px; left: 20px;" onclick="launchGame('popper')">
+            <div class="icon-img" style="background: #0f0;"></div><span>POPPER.EXE</span>
         </div>
-        <div class="icon" style="top: 220px; left: 20px;" onclick="launchGame('quest')">
-            <img src=""><span>QUEST.EXE</span>
+        <div class="icon" id="icon-quest" style="top: 200px; left: 20px;" onclick="launchGame('quest')">
+            <div class="icon-img" style="background: #f0f;"></div><span>QUEST.EXE</span>
         </div>
-        <div class="icon" style="bottom: 50px; right: 20px;">
-            <img style="background: #800000;"><span>BIN</span>
+        <div class="icon" style="bottom: 50px; left: 20px;" onclick="triggerRecycleScare()">
+            <div class="icon-img" style="background: #800000;"></div><span>RECYCLE BIN</span>
+        </div>
+    </div>
+
+    <div id="start-menu">
+        <div class="start-menu-sidebar">98XX Edition</div>
+        <div class="start-menu-items">
+            <div class="start-item"><div class="start-item-icon"></div><span>Programs</span></div>
+            <div class="start-item"><div class="start-item-icon"></div><span>Documents</span></div>
+            <div class="start-item"><div class="start-item-icon"></div><span>Settings</span></div>
+            <div class="start-item" onclick="location.reload()"><div class="start-item-icon" style="background: #800000;"></div><span>Shut Down...</span></div>
         </div>
     </div>
 
     <div id="taskbar">
-        <div class="start-btn">Start</div>
+        <div class="start-btn" id="start-trigger">
+            <div style="width: 16px; height: 16px; background: #808080;"></div>
+            Start
+        </div>
+        <div id="active-tasks" style="display: flex; gap: 2px;"></div>
         <div style="flex-grow: 1;"></div>
-        <div id="clock" style="color: #000; border: 1px inset #fff; padding: 2px 5px; font-size: 12px;">12:00 PM</div>
+        <div id="clock" style="color: #000; border: 2px inset #fff; padding: 2px 5px; font-size: 11px; background: #c0c0c0;">12:00 PM</div>
     </div>
 
     <!-- GAME OVER / GLITCH BOX -->
     <div id="glitch-box" class="win98-window" style="display: none; width: 300px; left: 50%; top: 50%; transform: translate(-50%, -50%); z-index: 2000;">
-        <div class="title-bar"><span id="err-title">SYSTEM ERROR</span></div>
+        <div class="title-bar">
+            <span id="err-title">SYSTEM ERROR</span>
+            <div class="title-bar-controls"><div class="win98-btn">X</div></div>
+        </div>
         <div class="window-content">
             <p id="err-msg">FATAL EXCEPTION AT 0x0098XX.</p>
-            <button onclick="location.reload()">OK</button>
+            <div style="display: flex; justify-content: center; margin-top: 10px;">
+                <button onclick="location.reload()">OK</button>
+            </div>
         </div>
     </div>
 
@@ -101,7 +192,8 @@
             currentGame: null,
             audioCtx: null,
             isGlitched: false,
-            bonzoAggro: 0
+            bonzoAggro: 0,
+            ambientOsc: null
         };
 
         // --- BOOT SEQUENCE ---
@@ -141,6 +233,17 @@
         // --- AUDIO ---
         function initAudio() {
             state.audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+            
+            // Ambient Hum
+            const osc = state.audioCtx.createOscillator();
+            const gain = state.audioCtx.createGain();
+            osc.type = 'sine';
+            osc.frequency.setValueAtTime(50, state.audioCtx.currentTime);
+            gain.gain.setValueAtTime(0.02, state.audioCtx.currentTime);
+            osc.connect(gain);
+            gain.connect(state.audioCtx.destination);
+            osc.start();
+            state.ambientOsc = osc;
         }
 
         function playSound(freq, type, duration, vol=0.1) {
@@ -157,6 +260,42 @@
             osc.stop(state.audioCtx.currentTime + duration);
         }
 
+        // --- HORROR SYSTEM ---
+        window.triggerJumpscare = function(intensity = 1) {
+            const face = document.getElementById('bonzo-face');
+            face.style.display = 'flex';
+            face.style.background = intensity > 0.8 ? '#000' : 'transparent';
+            
+            playSound(100 + Math.random() * 1000, 'sawtooth', 0.5, 0.4);
+            state.isGlitched = true;
+            
+            setTimeout(() => {
+                face.style.display = 'none';
+                state.isGlitched = false;
+            }, 100 + (Math.random() * 400));
+        }
+
+        window.spawnError = function(title, msg) {
+            const err = document.createElement('div');
+            err.className = 'win98-window';
+            err.style.left = (20 + Math.random() * 50) + '%';
+            err.style.top = (20 + Math.random() * 50) + '%';
+            err.style.width = '250px';
+            err.style.zIndex = '5000';
+            err.innerHTML = `
+                <div class="title-bar"><span>${title}</span><div class="win98-btn" onclick="this.parentElement.parentElement.remove()">X</div></div>
+                <div class="window-content"><p>${msg}</p><button onclick="this.parentElement.parentElement.remove()">OK</button></div>
+            `;
+            document.body.appendChild(err);
+            playSound(400, 'square', 0.1);
+        }
+
+        window.triggerRecycleScare = function() {
+            playSound(50, 'square', 1, 0.5);
+            spawnError("ACCESS DENIED", "THE BIN IS FULL OF TEETH.");
+            setTimeout(() => triggerJumpscare(0.9), 500);
+        };
+
         // --- THREE.JS ENGINE ---
         const scene = new THREE.Scene();
         const camera = new THREE.PerspectiveCamera(75, window.innerWidth / window.innerHeight, 0.1, 1000);
@@ -166,14 +305,38 @@
 
         camera.position.z = 10;
 
+        // --- UI CONTROLS ---
+        const startTrigger = document.getElementById('start-trigger');
+        const startMenu = document.getElementById('start-menu');
+        
+        startTrigger.onclick = (e) => {
+            e.stopPropagation();
+            startMenu.style.display = startMenu.style.display === 'flex' ? 'none' : 'flex';
+        };
+
+        document.addEventListener('click', () => {
+            startMenu.style.display = 'none';
+        });
+
+        function updateTaskbar(gameName) {
+            const container = document.getElementById('active-tasks');
+            container.innerHTML = '';
+            if(gameName) {
+                const task = document.createElement('div');
+                task.className = 'start-btn';
+                task.style.minWidth = '100px';
+                task.innerText = gameName.toUpperCase();
+                container.appendChild(task);
+            }
+        }
+
         // --- MINI GAMES LOGIC ---
         window.launchGame = function(gameId) {
             if(state.currentGame) return;
-            console.log("Launching:", gameId);
             state.currentGame = gameId;
             playSound(440, 'sine', 0.1);
+            updateTaskbar(gameId);
             
-            // Setup scene based on game
             if(gameId === 'julian') setupJulian();
             if(gameId === 'popper') setupPopper();
             if(gameId === 'quest') setupQuest();
@@ -184,12 +347,16 @@
                 scene.remove(scene.children[0]); 
             }
             state.currentGame = null;
+            updateTaskbar(null);
             playSound(220, 'sine', 0.1);
         }
 
-        // --- GAME 1: JULIAN (Platformer) ---
-        let player, platforms = [], rune;
+        // --- GAME 1: JULIAN ---
+        let player, rune, playerVelocity = { y: 0 };
         function setupJulian() {
+            camera.position.set(0, 0, 10);
+            camera.lookAt(0, 0, 0);
+
             const ground = new THREE.Mesh(new THREE.BoxGeometry(20, 1, 1), new THREE.MeshPhongMaterial({color: 0x888888}));
             ground.position.y = -5;
             scene.add(ground);
@@ -208,42 +375,147 @@
             scene.add(new THREE.AmbientLight(0x404040));
         }
 
-        // --- GAME 2: POPPER (Clicking) ---
+        // --- GAME 2: POPPER ---
+        let balls = [];
         function setupPopper() {
+            camera.position.set(0, 0, 10);
             const light = new THREE.PointLight(0xffffff, 100);
             light.position.set(0, 0, 10);
             scene.add(light);
 
-            for(let i=0; i<10; i++) {
+            balls = [];
+            for(let i=0; i<15; i++) {
                 const ball = new THREE.Mesh(new THREE.SphereGeometry(0.5), new THREE.MeshPhongMaterial({color: Math.random() * 0xffffff}));
-                ball.position.set((Math.random()-0.5)*10, (Math.random()-0.5)*10, 0);
+                ball.position.set((Math.random()-0.5)*12, (Math.random()-0.5)*8, 0);
                 ball.userData.clickable = true;
                 scene.add(ball);
+                balls.push(ball);
             }
         }
+
+        // --- GAME 3: QUEST ---
+        let walls = [], questRune;
+        function setupQuest() {
+            camera.position.set(0, 0, 5);
+            const light = new THREE.PointLight(0xffffff, 20);
+            light.position.set(0, 0, 5);
+            scene.add(light);
+
+            const wallGeo = new THREE.BoxGeometry(1, 4, 10);
+            const wallMat = new THREE.MeshPhongMaterial({color: 0x444444});
+            
+            const leftWall = new THREE.Mesh(wallGeo, wallMat);
+            leftWall.position.set(-2, 0, -5);
+            scene.add(leftWall);
+
+            const rightWall = new THREE.Mesh(wallGeo, wallMat);
+            rightWall.position.set(2, 0, -5);
+            scene.add(rightWall);
+
+            questRune = new THREE.Mesh(new THREE.OctahedronGeometry(0.3), new THREE.MeshPhongMaterial({color: 0xff00ff, emissive: 0xff00ff}));
+            questRune.position.set(0, 0, -10);
+            scene.add(questRune);
+        }
+
+        // --- RAYCASTING FOR POPPER ---
+        const raycaster = new THREE.Raycaster();
+        const mouse = new THREE.Vector2();
+
+        window.onclick = (e) => {
+            if(state.currentGame !== 'popper') return;
+            mouse.x = (e.clientX / window.innerWidth) * 2 - 1;
+            mouse.y = -(e.clientY / window.innerHeight) * 2 + 1;
+            raycaster.setFromCamera(mouse, camera);
+            const intersects = raycaster.intersectObjects(scene.children);
+            if(intersects.length > 0 && intersects[0].object.userData.clickable) {
+                scene.remove(intersects[0].object);
+                balls = balls.filter(b => b !== intersects[0].object);
+                playSound(600, 'triangle', 0.1);
+                
+                // Popper jumpscare chance
+                if(Math.random() > 0.85) triggerJumpscare(0.5);
+
+                if(balls.length === 0) {
+                    collectRune();
+                    closeGame();
+                }
+            }
+        };
 
         // --- INPUT & LOOP ---
         const keys = {};
         window.onkeydown = (e) => keys[e.code] = true;
         window.onkeyup = (e) => keys[e.code] = false;
 
+        let questTimer = 0;
         function animate() {
             requestAnimationFrame(animate);
 
             if(state.currentGame === 'julian') {
-                if(keys['KeyA']) player.position.x -= 0.1;
-                if(keys['KeyD']) player.position.x += 0.1;
+                if(keys['KeyA']) player.position.x -= 0.12;
+                if(keys['KeyD']) player.position.x += 0.12;
+                if(keys['Space'] && player.position.y <= -4.1) {
+                    playerVelocity.y = 0.2;
+                    playSound(300, 'square', 0.1);
+                }
                 
+                playerVelocity.y -= 0.01;
+                player.position.y += playerVelocity.y;
+                if(player.position.y < -4.1) {
+                    player.position.y = -4.1;
+                    playerVelocity.y = 0;
+                }
+
                 if(player.position.distanceTo(rune.position) < 1) {
                     collectRune();
                     closeGame();
                 }
             }
 
+            if(state.currentGame === 'popper') {
+                balls.forEach(b => {
+                    b.rotation.x += 0.02;
+                    b.rotation.y += 0.02;
+                });
+            }
+
+            if(state.currentGame === 'quest') {
+                questTimer += 0.01;
+                if(keys['KeyW']) camera.position.z -= 0.1;
+                if(keys['KeyS']) camera.position.z += 0.1;
+                
+                // Quest jumpscare: something behind
+                if(questTimer > 8 && Math.random() > 0.995) {
+                    triggerJumpscare(0.7);
+                    questTimer = 0;
+                }
+
+                if(camera.position.distanceTo(questRune.position) < 1.5) {
+                    collectRune();
+                    closeGame();
+                }
+            }
+
+            // Ambient Glitches
+            if(!state.currentGame && state.runes > 0) {
+                if(Math.random() > 0.99) {
+                    const icons = ['icon-julian', 'icon-popper', 'icon-quest'];
+                    const icon = document.getElementById(icons[Math.floor(Math.random()*3)]);
+                    icon.style.transform = `translate(${(Math.random()-0.5)*15}px, ${(Math.random()-0.5)*15}px)`;
+                }
+                if(Math.random() > 0.998) {
+                    spawnError("SYSTEM ALERT", "HE IS WATCHING YOU TYPE.");
+                }
+            }
+
             if(state.isGlitched) {
                 renderer.setClearColor(Math.random() > 0.9 ? 0xff0000 : 0x008080);
+                if(Math.random() > 0.95) {
+                    renderer.domElement.style.transform = `translate(${(Math.random()-0.5)*10}px, ${(Math.random()-0.5)*10}px)`;
+                }
             } else {
                 renderer.setClearColor(0x008080);
+                renderer.domElement.style.transform = 'none';
             }
 
             renderer.render(scene, camera);
@@ -255,20 +527,40 @@
             document.getElementById('stats').innerText = `RUNES: ${state.runes}/3`;
             playSound(880, 'square', 0.5);
             glitchEffect();
+            
+            if(state.runes >= 3) {
+                setTimeout(triggerTrueEnding, 2000);
+            }
         }
 
         function glitchEffect() {
             state.isGlitched = true;
             setTimeout(() => state.isGlitched = false, 500);
             state.bonzoAggro += 1;
-            if(state.bonzoAggro > 2) triggerBonzo();
+            if(state.bonzoAggro > 5) triggerBonzo();
         }
 
         function triggerBonzo() {
+            triggerJumpscare(1);
             document.getElementById('glitch-box').style.display = 'block';
             document.getElementById('err-title').innerText = "FATAL: BONZOBANY";
             document.getElementById('err-msg').innerText = "THE RABBIT IS IN THE SYSTEM. REBOOT IMMEDIATELY.";
             playSound(50, 'sawtooth', 2, 0.5);
+        }
+
+        function triggerTrueEnding() {
+            document.getElementById('desktop').style.display = 'none';
+            document.getElementById('taskbar').style.display = 'none';
+            document.getElementById('bonzo-face').style.display = 'flex';
+            playSound(40, 'sawtooth', 5, 0.8);
+            
+            setTimeout(() => {
+                document.getElementById('bonzo-face').innerHTML = "<div style='color: #fff;'>YOU FOUND ME.</div>";
+            }, 3000);
+            
+            setTimeout(() => {
+                location.reload();
+            }, 6000);
         }
 
         // Clock
