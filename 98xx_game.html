@@ -1,0 +1,416 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>98XX - RUNE & BONZOBANY</title>
+    <style>
+        body { margin: 0; overflow: hidden; background: #008080; font-family: 'Courier New', Courier, monospace; }
+        canvas { display: block; }
+        #ui {
+            position: absolute;
+            bottom: 0;
+            left: 0;
+            width: 100%;
+            height: 40px;
+            background: #c0c0c0;
+            border-top: 2px solid #ffffff;
+            display: flex;
+            align-items: center;
+            padding: 0 10px;
+            box-sizing: border-box;
+            z-index: 10;
+        }
+        .start-btn {
+            background: #c0c0c0;
+            border: 2px solid;
+            border-color: #ffffff #808080 #808080 #ffffff;
+            padding: 2px 10px;
+            font-weight: bold;
+            display: flex;
+            align-items: center;
+            gap: 5px;
+            cursor: pointer;
+        }
+        .start-btn:active {
+            border-color: #808080 #ffffff #ffffff #808080;
+        }
+        #overlay {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            pointer-events: none;
+            background: linear-gradient(rgba(18, 16, 16, 0) 50%, rgba(0, 0, 0, 0.25) 50%), linear-gradient(90deg, rgba(255, 0, 0, 0.06), rgba(0, 255, 0, 0.02), rgba(0, 0, 255, 0.06));
+            background-size: 100% 4px, 3px 100%;
+            z-index: 100;
+            opacity: 0.3;
+        }
+        #stats {
+            position: absolute;
+            top: 10px;
+            right: 10px;
+            color: #ffffff;
+            text-shadow: 2px 2px #000;
+            font-size: 18px;
+            pointer-events: none;
+        }
+        #loading {
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            background: #c0c0c0;
+            border: 2px solid #ffffff;
+            padding: 20px;
+            text-align: center;
+            box-shadow: 4px 4px #000;
+        }
+        #msg-box {
+            display: none;
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            background: #c0c0c0;
+            border: 2px solid #ffffff;
+            width: 300px;
+            box-shadow: 4px 4px #000;
+            z-index: 1000;
+        }
+        .title-bar {
+            background: #000080;
+            color: white;
+            padding: 2px 5px;
+            font-weight: bold;
+            display: flex;
+            justify-content: space-between;
+        }
+        .content {
+            padding: 20px;
+            text-align: center;
+        }
+    </style>
+</head>
+<body>
+    <div id="overlay"></div>
+    <div id="ui">
+        <div class="start-btn">Start</div>
+        <div style="flex-grow: 1;"></div>
+        <div id="clock">12:00 PM</div>
+    </div>
+    <div id="stats">RUNES: 0/5</div>
+    <div id="loading">
+        <h2>LOADING SYSTEM...</h2>
+        <div style="width: 200px; height: 20px; border: 2px solid #808080; background: #fff; margin: auto;">
+            <div id="progress" style="width: 0%; height: 100%; background: #000080;"></div>
+        </div>
+    </div>
+
+    <div id="msg-box">
+        <div class="title-bar"><span>SYSTEM ERROR</span><span>[X]</span></div>
+        <div class="content">
+            <p id="msg-text">FATAL EXCEPTION HAS OCCURRED.</p>
+            <button onclick="location.reload()">RESTART</button>
+        </div>
+    </div>
+
+    <script type="module">
+        import * as THREE from 'https://unpkg.com/three@0.160.0/build/three.module.js';
+
+        // --- CONSTANTS & CONFIG ---
+        const RUNE_COUNT = 5;
+        const WORLD_SIZE = 100;
+        const GRID_SIZE = 10;
+        
+        // --- GAME STATE ---
+        const state = {
+            runesCollected: 0,
+            isGameOver: false,
+            playerSpeed: 0.15,
+            bonzoSpeed: 0.05,
+            glitchIntensity: 0.0,
+            clock: new THREE.Clock()
+        };
+
+        // --- CORE THREE.JS ---
+        const scene = new THREE.Scene();
+        scene.background = new THREE.Color(0x008080);
+        scene.fog = new THREE.FogExp2(0x008080, 0.02);
+
+        const camera = new THREE.PerspectiveCamera(75, window.innerWidth / window.innerHeight, 0.1, 1000);
+        const renderer = new THREE.WebGLRenderer({ antialias: false });
+        renderer.setSize(window.innerWidth, window.innerHeight);
+        renderer.setPixelRatio(window.devicePixelRatio > 1 ? 2 : 1);
+        document.body.appendChild(renderer.domElement);
+
+        // --- ASSET GENERATION ---
+        function createNoiseTexture(color1, color2) {
+            const canvas = document.createElement('canvas');
+            canvas.width = 64;
+            canvas.height = 64;
+            const ctx = canvas.getContext('2d');
+            for(let x=0; x<64; x++) {
+                for(let y=0; y<64; y++) {
+                    ctx.fillStyle = Math.random() > 0.5 ? color1 : color2;
+                    ctx.fillRect(x, y, 1, 1);
+                }
+            }
+            return new THREE.CanvasTexture(canvas);
+        }
+
+        const win98Texture = createNoiseTexture('#c0c0c0', '#d0d0d0');
+        const runeTexture = createNoiseTexture('#ff00ff', '#00ffff');
+
+        // --- ENVIRONMENT ---
+        const floorGeo = new THREE.PlaneGeometry(WORLD_SIZE * 2, WORLD_SIZE * 2);
+        const floorMat = new THREE.MeshPhongMaterial({ color: 0x008080, side: THREE.DoubleSide });
+        const floor = new THREE.Mesh(floorGeo, floorMat);
+        floor.rotation.x = Math.PI / 2;
+        scene.add(floor);
+
+        // Instanced Mesh for Desktop Icons (Performance)
+        const iconGeo = new THREE.BoxGeometry(2, 2, 2);
+        const iconMat = new THREE.MeshPhongMaterial({ map: win98Texture });
+        const iconMesh = new THREE.InstancedMesh(iconGeo, iconMat, 100);
+        const dummy = new THREE.Object3D();
+
+        const obstacles = [];
+        for(let i=0; i<100; i++) {
+            const x = (Math.random() - 0.5) * WORLD_SIZE;
+            const z = (Math.random() - 0.5) * WORLD_SIZE;
+            if(Math.abs(x) < 5 && Math.abs(z) < 5) continue; // Keep center clear
+            
+            dummy.position.set(x, 1, z);
+            dummy.updateMatrix();
+            iconMesh.setMatrixAt(i, dummy.matrix);
+            obstacles.push(new THREE.Box3().setFromObject(new THREE.Mesh(iconGeo).translateX(x).translateZ(z).translateY(1)));
+        }
+        scene.add(iconMesh);
+
+        // --- PLAYER ---
+        const playerGeo = new THREE.BoxGeometry(1, 1, 1);
+        const playerMat = new THREE.MeshPhongMaterial({ color: 0xffffff });
+        const player = new THREE.Mesh(playerGeo, playerMat);
+        player.position.y = 0.5;
+        scene.add(player);
+
+        // --- BONZOBANY (The Stalker) ---
+        const bonzoGroup = new THREE.Group();
+        const bonzoBody = new THREE.Mesh(new THREE.BoxGeometry(1.2, 1.5, 1.2), new THREE.MeshPhongMaterial({ color: 0x4b0082 }));
+        const bonzoHead = new THREE.Mesh(new THREE.BoxGeometry(1, 1, 1), new THREE.MeshPhongMaterial({ color: 0x4b0082 }));
+        bonzoHead.position.y = 1.2;
+        const earL = new THREE.Mesh(new THREE.BoxGeometry(0.2, 0.8, 0.2), new THREE.MeshPhongMaterial({ color: 0x4b0082 }));
+        earL.position.set(0.3, 2, 0);
+        const earR = new THREE.Mesh(new THREE.BoxGeometry(0.2, 0.8, 0.2), new THREE.MeshPhongMaterial({ color: 0x4b0082 }));
+        earR.position.set(-0.3, 2, 0);
+        const eyeL = new THREE.Mesh(new THREE.BoxGeometry(0.2, 0.2, 0.2), new THREE.MeshPhongMaterial({ color: 0xff0000 }));
+        eyeL.position.set(0.2, 1.3, 0.5);
+        const eyeR = new THREE.Mesh(new THREE.BoxGeometry(0.2, 0.2, 0.2), new THREE.MeshPhongMaterial({ color: 0xff0000 }));
+        eyeR.position.set(-0.2, 1.3, 0.5);
+        
+        bonzoGroup.add(bonzoBody, bonzoHead, earL, earR, eyeL, eyeR);
+        bonzoGroup.position.set(20, 0.75, 20);
+        scene.add(bonzoGroup);
+        const bonzo = bonzoGroup;
+
+        // --- AUDIO (Web Audio API - Procedural) ---
+        const audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+        function playTone(freq, type, duration, volume = 0.1) {
+            const osc = audioCtx.createOscillator();
+            const gain = audioCtx.createGain();
+            osc.type = type;
+            osc.frequency.setValueAtTime(freq, audioCtx.currentTime);
+            gain.gain.setValueAtTime(volume, audioCtx.currentTime);
+            gain.gain.exponentialRampToValueAtTime(0.0001, audioCtx.currentTime + duration);
+            osc.connect(gain);
+            gain.connect(audioCtx.destination);
+            osc.start();
+            osc.stop(audioCtx.currentTime + duration);
+        }
+
+        function playGlitchSound() {
+            for(let i=0; i<5; i++) {
+                setTimeout(() => playTone(Math.random() * 1000 + 100, 'square', 0.1, 0.05), i * 50);
+            }
+        }
+
+        function playCollectSound() {
+            playTone(440, 'sine', 0.2);
+            setTimeout(() => playTone(880, 'sine', 0.4), 100);
+        }
+
+        function playDeathSound() {
+            playTone(100, 'sawtooth', 1.0, 0.2);
+            playTone(50, 'sawtooth', 1.0, 0.2);
+        }
+
+        // --- RUNES ---
+        const runes = [];
+        const runeGeo = new THREE.OctahedronGeometry(0.5);
+        const runeMat = new THREE.MeshPhongMaterial({ color: 0xff00ff, emissive: 0xff00ff, emissiveIntensity: 0.5 });
+        
+        function spawnRune() {
+            const rune = new THREE.Mesh(runeGeo, runeMat);
+            rune.position.set((Math.random() - 0.5) * WORLD_SIZE, 0.7, (Math.random() - 0.5) * WORLD_SIZE);
+            scene.add(rune);
+            runes.push(rune);
+        }
+
+        for(let i=0; i<RUNE_COUNT; i++) spawnRune();
+
+        // --- LIGHTING ---
+        const ambientLight = new THREE.AmbientLight(0x404040, 2);
+        scene.add(ambientLight);
+
+        const spotLight = new THREE.SpotLight(0xffffff, 100);
+        spotLight.position.set(0, 10, 0);
+        scene.add(spotLight);
+
+        // --- INPUT ---
+        const keys = {};
+        window.addEventListener('keydown', (e) => keys[e.code] = true);
+        window.addEventListener('keyup', (e) => keys[e.code] = false);
+
+        // --- LOGIC ---
+        function updatePlayer(dt) {
+            if(state.isGameOver) return;
+
+            const prevPos = player.position.clone();
+            if(keys['KeyW']) player.position.z -= state.playerSpeed;
+            if(keys['KeyS']) player.position.z += state.playerSpeed;
+            if(keys['KeyA']) player.position.x -= state.playerSpeed;
+            if(keys['KeyD']) player.position.x += state.playerSpeed;
+
+            // Collision with obstacles
+            const playerBB = new THREE.Box3().setFromObject(player);
+            for(const box of obstacles) {
+                if(playerBB.intersectsBox(box)) {
+                    player.position.copy(prevPos);
+                    break;
+                }
+            }
+
+            // Boundary check
+            player.position.x = THREE.MathUtils.clamp(player.position.x, -WORLD_SIZE, WORLD_SIZE);
+            player.position.z = THREE.MathUtils.clamp(player.position.z, -WORLD_SIZE, WORLD_SIZE);
+
+            // Camera follow
+            camera.position.set(player.position.x, player.position.y + 10, player.position.z + 10);
+            camera.lookAt(player.position);
+            spotLight.position.set(player.position.x, 10, player.position.z);
+            spotLight.target = player;
+        }
+
+        function updateBonzo(dt) {
+            if(state.isGameOver) return;
+
+            const dir = new THREE.Vector3().subVectors(player.position, bonzo.position).normalize();
+            bonzo.position.addScaledVector(dir, state.bonzoSpeed + (state.runesCollected * 0.01));
+            bonzo.lookAt(player.position);
+
+            if(player.position.distanceTo(bonzo.position) < 1.5) {
+                gameOver("SYSTEM CRITICAL FAILURE: BONZOBANY INTERFERENCE");
+            }
+        }
+
+        function updateRunes() {
+            runes.forEach((rune, index) => {
+                rune.rotation.y += 0.05;
+                rune.position.y = 0.7 + Math.sin(Date.now() * 0.005) * 0.2;
+
+                if(player.position.distanceTo(rune.position) < 1.5) {
+                    scene.remove(rune);
+                    runes.splice(index, 1);
+                    state.runesCollected++;
+                    document.getElementById('stats').innerText = `RUNES: ${state.runesCollected}/5`;
+                    playCollectSound();
+                    glitchEffect();
+                    
+                    if(state.runesCollected === RUNE_COUNT) {
+                        win();
+                    }
+                }
+            });
+        }
+
+        function glitchEffect() {
+            state.glitchIntensity = 1.0;
+            scene.background = new THREE.Color(0xff0000);
+            playGlitchSound();
+            setTimeout(() => {
+                state.glitchIntensity = 0.0;
+                scene.background = new THREE.Color(0x008080);
+            }, 200);
+        }
+
+        function gameOver(msg) {
+            state.isGameOver = true;
+            playDeathSound();
+            document.getElementById('msg-box').style.display = 'block';
+            document.getElementById('msg-text').innerText = msg;
+        }
+
+        function win() {
+            state.isGameOver = true;
+            document.getElementById('msg-box').style.display = 'block';
+            document.getElementById('msg-text').innerText = "SYSTEM RESTORED. RUNES ACTIVATED. YOU ARE FREE.";
+            document.querySelector('.title-bar').style.background = '#008000';
+        }
+
+        // --- LOOP ---
+        function animate() {
+            requestAnimationFrame(animate);
+            const dt = state.clock.getDelta();
+
+            updatePlayer(dt);
+            updateBonzo(dt);
+            updateRunes();
+
+            if(state.glitchIntensity > 0) {
+                renderer.setClearColor(new THREE.Color(Math.random(), 0, 0));
+            } else {
+                renderer.setClearColor(0x008080);
+            }
+
+            renderer.render(scene, camera);
+        }
+
+        // --- INIT ---
+        window.addEventListener('resize', () => {
+            camera.aspect = window.innerWidth / window.innerHeight;
+            camera.updateProjectionMatrix();
+            renderer.setSize(window.innerWidth, window.innerHeight);
+        });
+
+        // Start button logic
+        document.querySelector('.start-btn').addEventListener('click', () => {
+            if (audioCtx.state === 'suspended') {
+                audioCtx.resume();
+            }
+            playTone(440, 'sine', 0.1); // Feedback
+        });
+
+        // Simulating load
+        let progress = 0;
+        const interval = setInterval(() => {
+            progress += 5;
+            document.getElementById('progress').style.width = progress + '%';
+            if(progress >= 100) {
+                clearInterval(interval);
+                document.getElementById('loading').style.display = 'none';
+                // Wait for click to actually start loop or just start
+                animate();
+            }
+        }, 50);
+
+        // Clock
+        setInterval(() => {
+            const now = new Date();
+            document.getElementById('clock').innerText = now.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
+        }, 1000);
+
+    </script>
+</body>
+</html>
