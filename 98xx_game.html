@@ -3,407 +3,273 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>98XX - RUNE & BONZOBANY</title>
+    <title>98XX - THE BOARD</title>
     <style>
-        body { margin: 0; overflow: hidden; background: #008080; font-family: 'Courier New', Courier, monospace; }
+        body, html { margin: 0; padding: 0; overflow: hidden; height: 100%; background: #000; font-family: 'Courier New', Courier, monospace; color: #fff; }
         canvas { display: block; }
-        #ui {
-            position: absolute;
-            bottom: 0;
-            left: 0;
-            width: 100%;
-            height: 40px;
-            background: #c0c0c0;
-            border-top: 2px solid #ffffff;
-            display: flex;
-            align-items: center;
-            padding: 0 10px;
-            box-sizing: border-box;
-            z-index: 10;
+
+        /* --- UI OVERLAYS --- */
+        #ui-layer { position: absolute; top: 0; left: 0; width: 100%; height: 100%; pointer-events: none; z-index: 100; }
+        .win98-window {
+            position: absolute; background: #c0c0c0; border: 2px solid; border-color: #dfdfdf #808080 #808080 #dfdfdf;
+            padding: 2px; box-shadow: 2px 2px 0 #000; pointer-events: auto;
         }
-        .start-btn {
-            background: #c0c0c0;
-            border: 2px solid;
-            border-color: #ffffff #808080 #808080 #ffffff;
-            padding: 2px 10px;
-            font-weight: bold;
-            display: flex;
-            align-items: center;
-            gap: 5px;
-            cursor: pointer;
-        }
-        .start-btn:active {
-            border-color: #808080 #ffffff #ffffff #808080;
-        }
-        #overlay {
-            position: absolute;
-            top: 0;
-            left: 0;
-            width: 100%;
-            height: 100%;
-            pointer-events: none;
-            background: linear-gradient(rgba(18, 16, 16, 0) 50%, rgba(0, 0, 0, 0.25) 50%), linear-gradient(90deg, rgba(255, 0, 0, 0.06), rgba(0, 255, 0, 0.02), rgba(0, 0, 255, 0.06));
-            background-size: 100% 4px, 3px 100%;
-            z-index: 100;
-            opacity: 0.3;
-        }
-        #stats {
-            position: absolute;
-            top: 10px;
-            right: 10px;
-            color: #ffffff;
-            text-shadow: 2px 2px #000;
-            font-size: 18px;
-            pointer-events: none;
-        }
-        #loading {
-            position: absolute;
-            top: 50%;
-            left: 50%;
-            transform: translate(-50%, -50%);
-            background: #c0c0c0;
-            border: 2px solid #ffffff;
-            padding: 20px;
-            text-align: center;
-            box-shadow: 4px 4px #000;
-        }
-        #msg-box {
-            display: none;
-            position: absolute;
-            top: 50%;
-            left: 50%;
-            transform: translate(-50%, -50%);
-            background: #c0c0c0;
-            border: 2px solid #ffffff;
-            width: 300px;
-            box-shadow: 4px 4px #000;
-            z-index: 1000;
-        }
-        .title-bar {
-            background: #000080;
-            color: white;
-            padding: 2px 5px;
-            font-weight: bold;
-            display: flex;
-            justify-content: space-between;
-        }
-        .content {
-            padding: 20px;
-            text-align: center;
-        }
+        .title-bar { background: #000080; color: white; padding: 3px 5px; font-weight: bold; display: flex; justify-content: space-between; align-items: center; }
+        .window-content { padding: 10px; color: #000; }
+        button { background: #c0c0c0; border: 2px solid; border-color: #dfdfdf #808080 #808080 #dfdfdf; cursor: pointer; padding: 3px 10px; }
+        button:active { border-color: #808080 #dfdfdf #dfdfdf #808080; }
+
+        /* --- BOOT SEQUENCE --- */
+        #boot-screen { position: absolute; width: 100%; height: 100%; background: #000; z-index: 1000; display: flex; flex-direction: column; justify-content: center; align-items: center; }
+        .bios-text { width: 80%; color: #0f0; font-size: 14px; text-align: left; }
+
+        /* --- DESKTOP --- */
+        #desktop { width: 100%; height: calc(100% - 30px); position: relative; display: none; background: #008080; }
+        .icon { position: absolute; width: 64px; height: 80px; text-align: center; cursor: pointer; pointer-events: auto; }
+        .icon img { width: 32px; height: 32px; background: #c0c0c0; display: block; margin: 0 auto 5px; border: 2px solid #fff; }
+        .icon span { background: #000080; color: #fff; font-size: 12px; padding: 1px 2px; }
+
+        #taskbar { position: absolute; bottom: 0; width: 100%; height: 30px; background: #c0c0c0; border-top: 2px solid #fff; display: none; z-index: 500; align-items: center; padding: 0 5px; box-sizing: border-box; }
+        .start-btn { font-weight: bold; display: flex; align-items: center; gap: 5px; border: 2px solid; border-color: #dfdfdf #808080 #808080 #dfdfdf; padding: 2px 10px; height: 22px; cursor: pointer; color: #000; }
+
+        /* --- CRT OVERLAY --- */
+        #crt { position: absolute; top: 0; left: 0; width: 100%; height: 100%; pointer-events: none; z-index: 10000;
+               background: linear-gradient(rgba(18, 16, 16, 0) 50%, rgba(0, 0, 0, 0.2) 50%), linear-gradient(90deg, rgba(255, 0, 0, 0.05), rgba(0, 255, 0, 0.02), rgba(0, 0, 255, 0.05));
+               background-size: 100% 4px, 3px 100%; opacity: 0.4; }
+
+        /* --- STATS --- */
+        #stats { position: absolute; top: 5px; right: 5px; color: #fff; z-index: 1000; text-shadow: 1px 1px #000; font-weight: bold; }
     </style>
 </head>
 <body>
-    <div id="overlay"></div>
-    <div id="ui">
-        <div class="start-btn">Start</div>
-        <div style="flex-grow: 1;"></div>
-        <div id="clock">12:00 PM</div>
+    <div id="crt"></div>
+    <div id="stats">RUNES: 0/3</div>
+
+    <!-- BOOT SCREEN -->
+    <div id="boot-screen">
+        <div class="bios-text" id="bios-log"></div>
     </div>
-    <div id="stats">RUNES: 0/5</div>
-    <div id="loading">
-        <h2>LOADING SYSTEM...</h2>
-        <div style="width: 200px; height: 20px; border: 2px solid #808080; background: #fff; margin: auto;">
-            <div id="progress" style="width: 0%; height: 100%; background: #000080;"></div>
+
+    <!-- LOGIN SCREEN -->
+    <div id="login-screen" style="display: none; position: absolute; width: 100%; height: 100%; background: #008080; z-index: 900; display: flex; justify-content: center; align-items: center;">
+        <div class="win98-window" style="width: 300px;">
+            <div class="title-bar"><span>LOG ON TO 98XX</span></div>
+            <div class="window-content">
+                <p>USERNAME: <b>GUEST</b></p>
+                <p>PASSWORD: [********]</p>
+                <button id="login-btn" style="width: 100%">OK</button>
+            </div>
         </div>
     </div>
 
-    <div id="msg-box">
-        <div class="title-bar"><span>SYSTEM ERROR</span><span>[X]</span></div>
-        <div class="content">
-            <p id="msg-text">FATAL EXCEPTION HAS OCCURRED.</p>
-            <button onclick="location.reload()">RESTART</button>
+    <!-- DESKTOP -->
+    <div id="desktop">
+        <div class="icon" style="top: 20px; left: 20px;" onclick="launchGame('julian')">
+            <img src=""><span>JULIAN.EXE</span>
+        </div>
+        <div class="icon" style="top: 120px; left: 20px;" onclick="launchGame('popper')">
+            <img src=""><span>POPPER.EXE</span>
+        </div>
+        <div class="icon" style="top: 220px; left: 20px;" onclick="launchGame('quest')">
+            <img src=""><span>QUEST.EXE</span>
+        </div>
+        <div class="icon" style="bottom: 50px; right: 20px;">
+            <img style="background: #800000;"><span>BIN</span>
+        </div>
+    </div>
+
+    <div id="taskbar">
+        <div class="start-btn">Start</div>
+        <div style="flex-grow: 1;"></div>
+        <div id="clock" style="color: #000; border: 1px inset #fff; padding: 2px 5px; font-size: 12px;">12:00 PM</div>
+    </div>
+
+    <!-- GAME OVER / GLITCH BOX -->
+    <div id="glitch-box" class="win98-window" style="display: none; width: 300px; left: 50%; top: 50%; transform: translate(-50%, -50%); z-index: 2000;">
+        <div class="title-bar"><span id="err-title">SYSTEM ERROR</span></div>
+        <div class="window-content">
+            <p id="err-msg">FATAL EXCEPTION AT 0x0098XX.</p>
+            <button onclick="location.reload()">OK</button>
         </div>
     </div>
 
     <script type="module">
         import * as THREE from 'https://unpkg.com/three@0.160.0/build/three.module.js';
 
-        // --- CONSTANTS & CONFIG ---
-        const RUNE_COUNT = 5;
-        const WORLD_SIZE = 100;
-        const GRID_SIZE = 10;
-        
-        // --- GAME STATE ---
         const state = {
-            runesCollected: 0,
-            isGameOver: false,
-            playerSpeed: 0.15,
-            bonzoSpeed: 0.05,
-            glitchIntensity: 0.0,
-            clock: new THREE.Clock()
+            runes: 0,
+            currentGame: null,
+            audioCtx: null,
+            isGlitched: false,
+            bonzoAggro: 0
         };
 
-        // --- CORE THREE.JS ---
-        const scene = new THREE.Scene();
-        scene.background = new THREE.Color(0x008080);
-        scene.fog = new THREE.FogExp2(0x008080, 0.02);
+        // --- BOOT SEQUENCE ---
+        const biosLines = [
+            "98XX BIOS Ver 1.0.2",
+            "Copyright (C) 1998 JacksonGameStudios",
+            "CPU: Intel Pentium II 300MHz",
+            "Memory Test: 64MB OK",
+            "Detecting Primary Master ... OK",
+            "Booting from C: ...",
+            "Loading 98XX OS ...",
+            "Starting system services ...",
+            "Welcome to the Board."
+        ];
 
+        async function runBoot() {
+            const log = document.getElementById('bios-log');
+            for(let line of biosLines) {
+                log.innerHTML += line + "<br>";
+                await new Promise(r => setTimeout(r, 200 + Math.random() * 500));
+            }
+            setTimeout(() => {
+                document.getElementById('boot-screen').style.display = 'none';
+                document.getElementById('login-screen').style.display = 'flex';
+            }, 1000);
+        }
+
+        document.getElementById('login-btn').onclick = () => {
+            document.getElementById('login-screen').style.display = 'none';
+            document.getElementById('desktop').style.display = 'block';
+            document.getElementById('taskbar').style.display = 'flex';
+            initAudio();
+        };
+
+        runBoot();
+
+        // --- AUDIO ---
+        function initAudio() {
+            state.audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+        }
+
+        function playSound(freq, type, duration, vol=0.1) {
+            if(!state.audioCtx) return;
+            const osc = state.audioCtx.createOscillator();
+            const gain = state.audioCtx.createGain();
+            osc.type = type;
+            osc.frequency.setValueAtTime(freq, state.audioCtx.currentTime);
+            gain.gain.setValueAtTime(vol, state.audioCtx.currentTime);
+            gain.gain.exponentialRampToValueAtTime(0.0001, state.audioCtx.currentTime + duration);
+            osc.connect(gain);
+            gain.connect(state.audioCtx.destination);
+            osc.start();
+            osc.stop(state.audioCtx.currentTime + duration);
+        }
+
+        // --- THREE.JS ENGINE ---
+        const scene = new THREE.Scene();
         const camera = new THREE.PerspectiveCamera(75, window.innerWidth / window.innerHeight, 0.1, 1000);
         const renderer = new THREE.WebGLRenderer({ antialias: false });
         renderer.setSize(window.innerWidth, window.innerHeight);
-        renderer.setPixelRatio(window.devicePixelRatio > 1 ? 2 : 1);
-        document.body.appendChild(renderer.domElement);
+        document.getElementById('desktop').appendChild(renderer.domElement);
 
-        // --- ASSET GENERATION ---
-        function createNoiseTexture(color1, color2) {
-            const canvas = document.createElement('canvas');
-            canvas.width = 64;
-            canvas.height = 64;
-            const ctx = canvas.getContext('2d');
-            for(let x=0; x<64; x++) {
-                for(let y=0; y<64; y++) {
-                    ctx.fillStyle = Math.random() > 0.5 ? color1 : color2;
-                    ctx.fillRect(x, y, 1, 1);
-                }
-            }
-            return new THREE.CanvasTexture(canvas);
-        }
+        camera.position.z = 10;
 
-        const win98Texture = createNoiseTexture('#c0c0c0', '#d0d0d0');
-        const runeTexture = createNoiseTexture('#ff00ff', '#00ffff');
-
-        // --- ENVIRONMENT ---
-        const floorGeo = new THREE.PlaneGeometry(WORLD_SIZE * 2, WORLD_SIZE * 2);
-        const floorMat = new THREE.MeshPhongMaterial({ color: 0x008080, side: THREE.DoubleSide });
-        const floor = new THREE.Mesh(floorGeo, floorMat);
-        floor.rotation.x = Math.PI / 2;
-        scene.add(floor);
-
-        // Instanced Mesh for Desktop Icons (Performance)
-        const iconGeo = new THREE.BoxGeometry(2, 2, 2);
-        const iconMat = new THREE.MeshPhongMaterial({ map: win98Texture });
-        const iconMesh = new THREE.InstancedMesh(iconGeo, iconMat, 100);
-        const dummy = new THREE.Object3D();
-
-        const obstacles = [];
-        for(let i=0; i<100; i++) {
-            const x = (Math.random() - 0.5) * WORLD_SIZE;
-            const z = (Math.random() - 0.5) * WORLD_SIZE;
-            if(Math.abs(x) < 5 && Math.abs(z) < 5) continue; // Keep center clear
+        // --- MINI GAMES LOGIC ---
+        window.launchGame = function(gameId) {
+            if(state.currentGame) return;
+            console.log("Launching:", gameId);
+            state.currentGame = gameId;
+            playSound(440, 'sine', 0.1);
             
-            dummy.position.set(x, 1, z);
-            dummy.updateMatrix();
-            iconMesh.setMatrixAt(i, dummy.matrix);
-            obstacles.push(new THREE.Box3().setFromObject(new THREE.Mesh(iconGeo).translateX(x).translateZ(z).translateY(1)));
-        }
-        scene.add(iconMesh);
+            // Setup scene based on game
+            if(gameId === 'julian') setupJulian();
+            if(gameId === 'popper') setupPopper();
+            if(gameId === 'quest') setupQuest();
+        };
 
-        // --- PLAYER ---
-        const playerGeo = new THREE.BoxGeometry(1, 1, 1);
-        const playerMat = new THREE.MeshPhongMaterial({ color: 0xffffff });
-        const player = new THREE.Mesh(playerGeo, playerMat);
-        player.position.y = 0.5;
-        scene.add(player);
-
-        // --- BONZOBANY (The Stalker) ---
-        const bonzoGroup = new THREE.Group();
-        const bonzoBody = new THREE.Mesh(new THREE.BoxGeometry(1.2, 1.5, 1.2), new THREE.MeshPhongMaterial({ color: 0x4b0082 }));
-        const bonzoHead = new THREE.Mesh(new THREE.BoxGeometry(1, 1, 1), new THREE.MeshPhongMaterial({ color: 0x4b0082 }));
-        bonzoHead.position.y = 1.2;
-        const earL = new THREE.Mesh(new THREE.BoxGeometry(0.2, 0.8, 0.2), new THREE.MeshPhongMaterial({ color: 0x4b0082 }));
-        earL.position.set(0.3, 2, 0);
-        const earR = new THREE.Mesh(new THREE.BoxGeometry(0.2, 0.8, 0.2), new THREE.MeshPhongMaterial({ color: 0x4b0082 }));
-        earR.position.set(-0.3, 2, 0);
-        const eyeL = new THREE.Mesh(new THREE.BoxGeometry(0.2, 0.2, 0.2), new THREE.MeshPhongMaterial({ color: 0xff0000 }));
-        eyeL.position.set(0.2, 1.3, 0.5);
-        const eyeR = new THREE.Mesh(new THREE.BoxGeometry(0.2, 0.2, 0.2), new THREE.MeshPhongMaterial({ color: 0xff0000 }));
-        eyeR.position.set(-0.2, 1.3, 0.5);
-        
-        bonzoGroup.add(bonzoBody, bonzoHead, earL, earR, eyeL, eyeR);
-        bonzoGroup.position.set(20, 0.75, 20);
-        scene.add(bonzoGroup);
-        const bonzo = bonzoGroup;
-
-        // --- AUDIO (Web Audio API - Procedural) ---
-        const audioCtx = new (window.AudioContext || window.webkitAudioContext)();
-        function playTone(freq, type, duration, volume = 0.1) {
-            const osc = audioCtx.createOscillator();
-            const gain = audioCtx.createGain();
-            osc.type = type;
-            osc.frequency.setValueAtTime(freq, audioCtx.currentTime);
-            gain.gain.setValueAtTime(volume, audioCtx.currentTime);
-            gain.gain.exponentialRampToValueAtTime(0.0001, audioCtx.currentTime + duration);
-            osc.connect(gain);
-            gain.connect(audioCtx.destination);
-            osc.start();
-            osc.stop(audioCtx.currentTime + duration);
-        }
-
-        function playGlitchSound() {
-            for(let i=0; i<5; i++) {
-                setTimeout(() => playTone(Math.random() * 1000 + 100, 'square', 0.1, 0.05), i * 50);
+        function closeGame() {
+            while(scene.children.length > 0){ 
+                scene.remove(scene.children[0]); 
             }
+            state.currentGame = null;
+            playSound(220, 'sine', 0.1);
         }
 
-        function playCollectSound() {
-            playTone(440, 'sine', 0.2);
-            setTimeout(() => playTone(880, 'sine', 0.4), 100);
-        }
+        // --- GAME 1: JULIAN (Platformer) ---
+        let player, platforms = [], rune;
+        function setupJulian() {
+            const ground = new THREE.Mesh(new THREE.BoxGeometry(20, 1, 1), new THREE.MeshPhongMaterial({color: 0x888888}));
+            ground.position.y = -5;
+            scene.add(ground);
+            
+            player = new THREE.Mesh(new THREE.BoxGeometry(0.8, 0.8, 0.8), new THREE.MeshPhongMaterial({color: 0xffffff}));
+            player.position.set(-8, -4, 0);
+            scene.add(player);
 
-        function playDeathSound() {
-            playTone(100, 'sawtooth', 1.0, 0.2);
-            playTone(50, 'sawtooth', 1.0, 0.2);
-        }
-
-        // --- RUNES ---
-        const runes = [];
-        const runeGeo = new THREE.OctahedronGeometry(0.5);
-        const runeMat = new THREE.MeshPhongMaterial({ color: 0xff00ff, emissive: 0xff00ff, emissiveIntensity: 0.5 });
-        
-        function spawnRune() {
-            const rune = new THREE.Mesh(runeGeo, runeMat);
-            rune.position.set((Math.random() - 0.5) * WORLD_SIZE, 0.7, (Math.random() - 0.5) * WORLD_SIZE);
+            rune = new THREE.Mesh(new THREE.OctahedronGeometry(0.3), new THREE.MeshPhongMaterial({color: 0xff00ff, emissive: 0xff00ff}));
+            rune.position.set(8, -4, 0);
             scene.add(rune);
-            runes.push(rune);
+
+            const light = new THREE.PointLight(0xffffff, 50);
+            light.position.set(0, 5, 5);
+            scene.add(light);
+            scene.add(new THREE.AmbientLight(0x404040));
         }
 
-        for(let i=0; i<RUNE_COUNT; i++) spawnRune();
+        // --- GAME 2: POPPER (Clicking) ---
+        function setupPopper() {
+            const light = new THREE.PointLight(0xffffff, 100);
+            light.position.set(0, 0, 10);
+            scene.add(light);
 
-        // --- LIGHTING ---
-        const ambientLight = new THREE.AmbientLight(0x404040, 2);
-        scene.add(ambientLight);
+            for(let i=0; i<10; i++) {
+                const ball = new THREE.Mesh(new THREE.SphereGeometry(0.5), new THREE.MeshPhongMaterial({color: Math.random() * 0xffffff}));
+                ball.position.set((Math.random()-0.5)*10, (Math.random()-0.5)*10, 0);
+                ball.userData.clickable = true;
+                scene.add(ball);
+            }
+        }
 
-        const spotLight = new THREE.SpotLight(0xffffff, 100);
-        spotLight.position.set(0, 10, 0);
-        scene.add(spotLight);
-
-        // --- INPUT ---
+        // --- INPUT & LOOP ---
         const keys = {};
-        window.addEventListener('keydown', (e) => keys[e.code] = true);
-        window.addEventListener('keyup', (e) => keys[e.code] = false);
+        window.onkeydown = (e) => keys[e.code] = true;
+        window.onkeyup = (e) => keys[e.code] = false;
 
-        // --- LOGIC ---
-        function updatePlayer(dt) {
-            if(state.isGameOver) return;
-
-            const prevPos = player.position.clone();
-            if(keys['KeyW']) player.position.z -= state.playerSpeed;
-            if(keys['KeyS']) player.position.z += state.playerSpeed;
-            if(keys['KeyA']) player.position.x -= state.playerSpeed;
-            if(keys['KeyD']) player.position.x += state.playerSpeed;
-
-            // Collision with obstacles
-            const playerBB = new THREE.Box3().setFromObject(player);
-            for(const box of obstacles) {
-                if(playerBB.intersectsBox(box)) {
-                    player.position.copy(prevPos);
-                    break;
-                }
-            }
-
-            // Boundary check
-            player.position.x = THREE.MathUtils.clamp(player.position.x, -WORLD_SIZE, WORLD_SIZE);
-            player.position.z = THREE.MathUtils.clamp(player.position.z, -WORLD_SIZE, WORLD_SIZE);
-
-            // Camera follow
-            camera.position.set(player.position.x, player.position.y + 10, player.position.z + 10);
-            camera.lookAt(player.position);
-            spotLight.position.set(player.position.x, 10, player.position.z);
-            spotLight.target = player;
-        }
-
-        function updateBonzo(dt) {
-            if(state.isGameOver) return;
-
-            const dir = new THREE.Vector3().subVectors(player.position, bonzo.position).normalize();
-            bonzo.position.addScaledVector(dir, state.bonzoSpeed + (state.runesCollected * 0.01));
-            bonzo.lookAt(player.position);
-
-            if(player.position.distanceTo(bonzo.position) < 1.5) {
-                gameOver("SYSTEM CRITICAL FAILURE: BONZOBANY INTERFERENCE");
-            }
-        }
-
-        function updateRunes() {
-            runes.forEach((rune, index) => {
-                rune.rotation.y += 0.05;
-                rune.position.y = 0.7 + Math.sin(Date.now() * 0.005) * 0.2;
-
-                if(player.position.distanceTo(rune.position) < 1.5) {
-                    scene.remove(rune);
-                    runes.splice(index, 1);
-                    state.runesCollected++;
-                    document.getElementById('stats').innerText = `RUNES: ${state.runesCollected}/5`;
-                    playCollectSound();
-                    glitchEffect();
-                    
-                    if(state.runesCollected === RUNE_COUNT) {
-                        win();
-                    }
-                }
-            });
-        }
-
-        function glitchEffect() {
-            state.glitchIntensity = 1.0;
-            scene.background = new THREE.Color(0xff0000);
-            playGlitchSound();
-            setTimeout(() => {
-                state.glitchIntensity = 0.0;
-                scene.background = new THREE.Color(0x008080);
-            }, 200);
-        }
-
-        function gameOver(msg) {
-            state.isGameOver = true;
-            playDeathSound();
-            document.getElementById('msg-box').style.display = 'block';
-            document.getElementById('msg-text').innerText = msg;
-        }
-
-        function win() {
-            state.isGameOver = true;
-            document.getElementById('msg-box').style.display = 'block';
-            document.getElementById('msg-text').innerText = "SYSTEM RESTORED. RUNES ACTIVATED. YOU ARE FREE.";
-            document.querySelector('.title-bar').style.background = '#008000';
-        }
-
-        // --- LOOP ---
         function animate() {
             requestAnimationFrame(animate);
-            const dt = state.clock.getDelta();
 
-            updatePlayer(dt);
-            updateBonzo(dt);
-            updateRunes();
+            if(state.currentGame === 'julian') {
+                if(keys['KeyA']) player.position.x -= 0.1;
+                if(keys['KeyD']) player.position.x += 0.1;
+                
+                if(player.position.distanceTo(rune.position) < 1) {
+                    collectRune();
+                    closeGame();
+                }
+            }
 
-            if(state.glitchIntensity > 0) {
-                renderer.setClearColor(new THREE.Color(Math.random(), 0, 0));
+            if(state.isGlitched) {
+                renderer.setClearColor(Math.random() > 0.9 ? 0xff0000 : 0x008080);
             } else {
                 renderer.setClearColor(0x008080);
             }
 
             renderer.render(scene, camera);
         }
+        animate();
 
-        // --- INIT ---
-        window.addEventListener('resize', () => {
-            camera.aspect = window.innerWidth / window.innerHeight;
-            camera.updateProjectionMatrix();
-            renderer.setSize(window.innerWidth, window.innerHeight);
-        });
+        function collectRune() {
+            state.runes++;
+            document.getElementById('stats').innerText = `RUNES: ${state.runes}/3`;
+            playSound(880, 'square', 0.5);
+            glitchEffect();
+        }
 
-        // Start button logic
-        document.querySelector('.start-btn').addEventListener('click', () => {
-            if (audioCtx.state === 'suspended') {
-                audioCtx.resume();
-            }
-            playTone(440, 'sine', 0.1); // Feedback
-        });
+        function glitchEffect() {
+            state.isGlitched = true;
+            setTimeout(() => state.isGlitched = false, 500);
+            state.bonzoAggro += 1;
+            if(state.bonzoAggro > 2) triggerBonzo();
+        }
 
-        // Simulating load
-        let progress = 0;
-        const interval = setInterval(() => {
-            progress += 5;
-            document.getElementById('progress').style.width = progress + '%';
-            if(progress >= 100) {
-                clearInterval(interval);
-                document.getElementById('loading').style.display = 'none';
-                // Wait for click to actually start loop or just start
-                animate();
-            }
-        }, 50);
+        function triggerBonzo() {
+            document.getElementById('glitch-box').style.display = 'block';
+            document.getElementById('err-title').innerText = "FATAL: BONZOBANY";
+            document.getElementById('err-msg').innerText = "THE RABBIT IS IN THE SYSTEM. REBOOT IMMEDIATELY.";
+            playSound(50, 'sawtooth', 2, 0.5);
+        }
 
         // Clock
         setInterval(() => {
@@ -411,6 +277,11 @@
             document.getElementById('clock').innerText = now.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
         }, 1000);
 
+        window.addEventListener('resize', () => {
+            camera.aspect = window.innerWidth / window.innerHeight;
+            camera.updateProjectionMatrix();
+            renderer.setSize(window.innerWidth, window.innerHeight);
+        });
     </script>
 </body>
 </html>
